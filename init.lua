@@ -72,7 +72,7 @@ end
 
 source.complete_cb = function(response)
   local parsed_response = vim.fn.json_decode(response.body)
-  local input_tokens = response.prompt_eval_count
+  local input_tokens = parsed_response.prompt_eval_count
   local output_tokens = parsed_response.eval_count
   local content = parsed_response.message.content
 
