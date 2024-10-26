@@ -8,7 +8,7 @@ After installing the chatty-ai system, you should also install [Ollama](https://
 
 Follow the instructions to install the models you would like to use with chatty-ai as completion services. Once installed you can cofigure an Ollama service and register it with chatty-ai so that it can be used.
 
-In [./sampleconfig/config.lua] you can find simple instructions to do this.
+In [./sampleconfig/config.lua](./sampleconfig/config.lua) you can find simple instructions to do this.
 
 
 
