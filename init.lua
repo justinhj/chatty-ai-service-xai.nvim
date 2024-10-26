@@ -33,29 +33,22 @@ local default_config = {
   model = 'qwen2.5:3b',
 }
 
-local config = default_config
-
 local CHAT_PATH = '/api/chat'
 
 local source = {}
 
-source.new = function()
+source.create_service = function(name, config)
   local self = setmetatable({}, { __index = source })
+  config = config or {}
+  local merged_config = vim.tbl_deep_extend("force", {}, default_config, config)
+  self.config = merged_config
+  self.name = name
   return self
 end
 
-source.setup = function(opts)
-  opts = opts or {}
-  config = vim.tbl_deep_extend("force", {}, default_config, opts)
-end
-
--- TODO config must be per config instance
-source.get_config = function()
-  return config
-end
-
 -- return url, headers, body
-source.configure_call = function(user_prompt, completion_config, is_stream)
+source.configure_call = function(self, user_prompt, completion_config, is_stream)
+  local config = self.config
   local url = config.scheme .. '://' .. config.host .. ':' .. config.port .. CHAT_PATH
   local headers = {}
   local body = {
@@ -84,12 +77,16 @@ source.complete_cb = function(response)
 end
 
 source.stream_cb = function(chunk)
-  local data = vim.json.decode(chunk)
-  local content = ''
-  if data.message and data.message.content then
-    content = data.message.content
+  local status, data = pcall(vim.json.decode, chunk)
+  if status then
+    local content = ''
+    if data.message and data.message.content then
+      content = data.message.content
+    end
+    return content
+  else
+    error(data)
   end
-  return content
 end
 
 source.stream_complete_cb = function(response)
@@ -120,12 +117,6 @@ source.stream_complete_cb = function(response)
   return text, input_tokens, output_tokens
 end
 
--- This should be in user space
-chatty.register_service('ollama', source.new())
-
 return {
-  setup = source.setup,
-  get_config = function()
-    return config
-  end
+  create_service = source.create_service
 }
