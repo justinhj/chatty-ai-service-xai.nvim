@@ -57,25 +57,24 @@ end
 -- return url, headers, body
 source.configure_call = function(user_prompt, completion_config, is_stream)
   local url = config.scheme .. '://' .. config.host .. ':' .. config.port .. CHAT_PATH
-  local headers = {sample = 'pretend value'}
+  local headers = {}
   local body = {
     model = config.model,
-    stream = false,
+    stream = is_stream,
     messages = {
       { role = 'user',
-        content = 'Briefly, what do liberals believe about taxation?',
+        content = user_prompt,
       },
     }
   }
   return url, headers, body
 end
 
-source.complete_cb = function(out)
-  -- parse the response, handle errors, return the text, token usage
-  local response = vim.fn.json_decode(out.body)
+source.complete_cb = function(response)
+  local parsed_response = vim.fn.json_decode(response.body)
   local input_tokens = response.prompt_eval_count
-  local output_tokens = response.eval_count
-  local content = response.message.content
+  local output_tokens = parsed_response.eval_count
+  local content = parsed_response.message.content
 
   return {
     content = content,
@@ -84,6 +83,44 @@ source.complete_cb = function(out)
   }
 end
 
+source.stream_cb = function(chunk)
+  local data = vim.json.decode(chunk)
+  local content = ''
+  if data.message and data.message.content then
+    content = data.message.content
+  end
+  return content
+end
+
+source.stream_complete_cb = function(response)
+  local body = response.body
+  local lines = {}
+  local text = ""
+
+  for line in body:gmatch("[^\r\n]+") do
+    table.insert(lines, line)
+  end
+
+  local input_tokens = 0
+  local output_tokens = 0
+
+  for _, line in ipairs(lines) do
+    local data = vim.fn.json_decode(line)
+    if data.reponse then
+      text = text .. data.response
+    end
+    if data.prompt_eval_count then
+      input_tokens = data.prompt_eval_count
+    end
+    if data.eval_count then
+      output_tokens = data.eval_count
+    end
+  end
+
+  return text, input_tokens, output_tokens
+end
+
+-- This should be in user space
 chatty.register_service('ollama', source.new())
 
 return {

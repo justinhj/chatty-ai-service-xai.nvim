@@ -1,6 +1,6 @@
 -- setup chatty and the ollama config
 local chatty = require('chatty-ai')
-local ollama = require('ollama-src')
+local ollama = require('init')
 
 ---@type OllamaConfig
 local ollama_config = {
@@ -26,3 +26,5 @@ chatty.setup(chatty_config)
 -- vim.print(ollama.get_config())
 
 vim.api.nvim_set_keymap('n', '<leader>ac', [[<cmd>lua require('chatty-ai').complete("ollama", "filetype_input", 'code_writer', 'buffer_replace', false)<CR>]], {noremap = true, silent = true })
+
+vim.api.nvim_set_keymap('n', '<leader>as', [[<cmd>lua require('chatty-ai').complete("ollama", "filetype_input", 'code_writer', 'buffer_replace', true)<CR>]], {noremap = true, silent = true })
