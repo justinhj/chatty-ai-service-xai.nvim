@@ -1,21 +1,6 @@
 local chatty = require('chatty-ai')
 
--- https://platform.openai.com/docs/api-reference/chat
-
--- > curl https://api.openai.com/v1/chat/completions \
---   -H "Content-Type: application/json" \
---   -H "Authorization: Bearer $OPENAI_API_KEY" \
---   -d '{
---      "model": "gpt-4o",
---      "messages": [{"role": "user", "content": "Say this is a test!"}],
---      "temperature": 0.7
---    }'
-
--- chunk response
--- {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-4o-mini", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{"role":"assistant","content":""},"logprobs":null,"finish_reason":null}]}
-
--- {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-4o-mini", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"stop"}]}
-
+-- https://docs.x.ai/api#introduction
 
 ---@class CompletionServiceConfig
 ---@field public name string
@@ -26,17 +11,17 @@ local chatty = require('chatty-ai')
 ---@field public stream_cb function
 ---@field public configure_call function
 
----@class OpenAIConfig
+---@class xAIConfig
 ---@field api_key_name string?
 ---@field model string?
 
----@type OpenAIConfig
+---@type xAIConfig
 local default_config = {
-  api_key_name = 'OPENAI_API_KEY',
-  model = 'gpt-4o',
+  api_key_name = 'XAI_API_KEY',
+  model = 'grok-beta',
 }
 
-local OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
+local XAI_URL = 'https://api.x.ai/v1/chat/completions'
 
 local source = {}
 
@@ -52,10 +37,10 @@ end
 -- return url, headers, body
 source.configure_call = function(self, user_prompt, completion_config, is_stream)
   local config = self.config
-  local url = OPENAI_URL
+  local url = XAI_URL
   local api_key = os.getenv(config.api_key_name)
   if not api_key then
-    error('OpenAI api key \'' .. config.api_key_name .. '\' not found in environment.')
+    error('xAI api key \'' .. config.api_key_name .. '\' not found in environment.')
   end
   local headers = {
       ['Authorization'] = 'Bearer ' .. api_key,
@@ -141,7 +126,6 @@ source.stream_complete_cb = function(response)
       return content, input_tokens, output_tokens
     else
       local status, data = pcall(vim.json.decode, chunk)
-      local content = ''
       if status then
         if #data.choices == 0 or data.choices[1].finish_reason == 'stop' then
         elseif data.choices and data.choices[1].delta then
