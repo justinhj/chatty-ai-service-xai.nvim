@@ -64,7 +64,7 @@ source.configure_call = function(self, user_prompt, completion_config, is_stream
     body['stream_options'] = { include_usage = is_stream }
   end
 
-  vim.print(vim.inspect(headers) .. vim.inspect(body))
+  -- vim.print(vim.inspect(headers) .. vim.inspect(body))
   return url, headers, body
 end
 
